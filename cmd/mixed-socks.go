@@ -47,7 +47,6 @@ func registerSignalHandlers() {
 	signal.Notify(sigs, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-sigs
-
 		os.Exit(0)
 	}()
 }

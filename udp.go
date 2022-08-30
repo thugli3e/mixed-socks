@@ -26,7 +26,6 @@ func NewUdpServer(udpIp string, port int) *UdpServer {
 		},
 	}
 	return &tcpLocal
-
 }
 
 func (u *UdpServer) Listen() error {
@@ -36,7 +35,7 @@ func (u *UdpServer) Listen() error {
 		logrus.Errorln("connect error", err)
 		return errors.New("udp listen error")
 	}
-	logrus.Infoln("listen udp:" + u.udpAddr.String())
+	logrus.Infoln("Listen udp:" + u.udpAddr.String())
 	u.serverConn = conn
 	go u.timeout()
 	for {

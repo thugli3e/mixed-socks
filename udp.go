@@ -36,7 +36,7 @@ func (u *UdpServer) Listen() error {
 		logrus.Errorln("connect error", err)
 		return errors.New("udp listen error")
 	}
-	logrus.Infoln("Listen udp:" + u.udpAddr.String())
+	logrus.Infoln("listen udp:" + u.udpAddr.String())
 	u.serverConn = conn
 	go u.timeout()
 	for {

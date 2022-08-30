@@ -114,14 +114,13 @@ func (s *SocksServer) handleSock4ConnectCmd(con net.Conn, addr string, port uint
 	}
 
 	forward := func(src net.Conn, dest net.Conn) {
-		defer src.Close()
-		defer dest.Close()
-		_, err := io.Copy(dest, src)
-		if err != nil {
-			logrus.Infoln(src.RemoteAddr().String(), err)
-		}
+		defer func(src, dest net.Conn) {
+			_ = dest.Close()
+			_ = src.Close()
+		}(src, dest)
+		_, _ = io.Copy(dest, src)
 	}
-	logrus.Infoln(con.RemoteAddr().String() + "-" + dest.LocalAddr().String() + "-" + dest.RemoteAddr().String() + " connect established!")
+	logrus.Infoln(con.RemoteAddr().String() + "<->" + dest.LocalAddr().String() + "-" + dest.RemoteAddr().String() + " connect established!")
 	go forward(con, dest)
 	go forward(dest, con)
 	return nil

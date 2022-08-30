@@ -149,24 +149,13 @@ func (s *SocksServer) handleConnectCmd(con net.Conn, addr string, port uint16) e
 	}
 
 	forward := func(src net.Conn, dest net.Conn) {
-		defer func(src net.Conn) {
-			err = src.Close()
-			if err != nil {
-				logrus.Warningln(err)
-			}
-		}(src)
-		defer func(dest net.Conn) {
-			err = dest.Close()
-			if err != nil {
-				logrus.Warningln(err)
-			}
-		}(dest)
-		_, err := io.Copy(dest, src)
-		if err != nil {
-			logrus.Infoln(src.RemoteAddr().String(), err)
-		}
+		defer func(src, dest net.Conn) {
+			_ = dest.Close()
+			_ = src.Close()
+		}(src, dest)
+		_, _ = io.Copy(dest, src)
 	}
-	logrus.Infoln(con.RemoteAddr().String() + "-" + dest.LocalAddr().String() + "-" + dest.RemoteAddr().String() + " connect established!")
+	logrus.Infoln(con.RemoteAddr().String() + "<->" + dest.LocalAddr().String() + "-" + dest.RemoteAddr().String() + " connect established!")
 	go forward(con, dest)
 	go forward(dest, con)
 	return nil
@@ -239,7 +228,9 @@ func (s *SocksServer) handleUdpCmd(con net.Conn, addr string, port uint16) error
 	}
 
 	forward := func(src net.Conn) {
-		defer src.Close()
+		defer func(src net.Conn) {
+			_ = src.Close()
+		}(src)
 		for {
 			_, err := io.ReadFull(src, make([]byte, 100))
 			if err != nil {

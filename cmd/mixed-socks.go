@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/sirupsen/logrus"
@@ -16,6 +17,8 @@ import (
 var (
 	host   string
 	port   int
+	ctx    context.Context
+	cancel context.CancelFunc
 	Header = figure.NewFigure("MixedSocks", "doom", true).String()
 	cmd    = &cobra.Command{
 		Use:               os.Args[0],
@@ -23,8 +26,9 @@ var (
 		DisableAutoGenTag: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(Header)
+			ctx, cancel = context.WithCancel(context.Background())
 			server := proxy.NewSocksServer(host, port)
-			server.ListenAndServe()
+			server.ListenAndServe(ctx)
 		},
 	}
 )
@@ -47,6 +51,7 @@ func registerSignalHandlers() {
 	signal.Notify(sigs, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-sigs
+		cancel()
 		os.Exit(0)
 	}()
 }

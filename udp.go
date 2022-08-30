@@ -17,10 +17,8 @@ type UdpServer struct {
 	srcUdpMap  SrcUdpMap
 }
 
-func NewUdpServer(udpIp string, port int) *UdpServer {
+func NewUdpServer() *UdpServer {
 	tcpLocal := UdpServer{
-		udpIp:   udpIp,
-		udpPort: port,
 		srcUdpMap: SrcUdpMap{
 			associated: make(map[string]*SrcUdpInfo),
 		},
@@ -29,13 +27,20 @@ func NewUdpServer(udpIp string, port int) *UdpServer {
 }
 
 func (u *UdpServer) Listen() error {
+	port, err := freePort()
+	if err != nil {
+		logrus.Errorln(err)
+		return err
+	}
+	u.udpIp = "localhost"
+	u.udpPort = port
 	u.udpAddr, _ = net.ResolveUDPAddr("udp", u.udpIp+":"+strconv.Itoa(u.udpPort))
 	conn, err := net.ListenUDP("udp", u.udpAddr)
 	if err != nil {
 		logrus.Errorln("connect error", err)
 		return errors.New("udp listen error")
 	}
-	logrus.Infoln("Listen udp:" + u.udpAddr.String())
+	//logrus.Infoln("Listen udp:" + u.udpAddr.String())
 	u.serverConn = conn
 	go u.timeout()
 	for {

@@ -1,8 +1,8 @@
 package proxy
 
 import (
+	"context"
 	"github.com/sirupsen/logrus"
-	"net"
 )
 
 const (
@@ -15,10 +15,9 @@ const (
 )
 
 type SocksServer struct {
-	tcpAddr *net.TCPAddr
 	sockIp  string
 	port    int
-	udpIp   string //udp associate ip
+	udpIp   string // udp associate ip
 	udpPort int    // udp associate address
 }
 
@@ -33,15 +32,17 @@ func NewSocksServer(host string, port int) *SocksServer {
 }
 
 // ListenAndServe socks4 socks5 server
-func (s *SocksServer) ListenAndServe() {
+func (s *SocksServer) ListenAndServe(ctx context.Context) {
 	go func() {
-		udpServer := NewUdpServer(s.udpIp, s.udpPort)
+		udpServer := NewUdpServer()
 		err := udpServer.Listen()
 		if err != nil {
 			logrus.Fatalln(err)
 		}
+		s.udpIp = udpServer.udpIp
+		s.udpPort = udpServer.udpPort
 	}()
-	err := s.listenTcpServer()
+	err := s.listenTcpServer(ctx)
 	if err != nil {
 		logrus.Fatalln(err)
 	}
